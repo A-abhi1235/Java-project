@@ -101,18 +101,22 @@ public class MainWindow extends JFrame implements SessionManager.SessionListener
     private JPanel createTopHeader() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(Color.WHITE);
-        header.setPreferredSize(new Dimension(getWidth(), 64));
+        header.setPreferredSize(new Dimension(getWidth(), 70));
         header.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER),
-            new EmptyBorder(10, 24, 10, 24)
+            new EmptyBorder(12, 28, 12, 28)
         ));
 
         // Brand Title
-        JPanel brand = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
+        JPanel brand = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         brand.setBackground(Color.WHITE);
 
-        JLabel logoLbl = new JLabel("🔍");
-        logoLbl.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 22));
+        JLabel logoLbl = new JLabel("◈", SwingConstants.CENTER);
+        logoLbl.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        logoLbl.setForeground(Color.WHITE);
+        logoLbl.setOpaque(true);
+        logoLbl.setBackground(Theme.PRIMARY);
+        logoLbl.setPreferredSize(new Dimension(34, 34));
 
         JLabel brandLbl = new JLabel("Campus Lost & Found");
         brandLbl.setFont(Theme.FONT_HEADER);
@@ -135,12 +139,14 @@ public class MainWindow extends JFrame implements SessionManager.SessionListener
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 14, 4));
         right.setBackground(Color.WHITE);
 
-        notifBtn = new JButton("🔔 Notifications (0)");
+        notifBtn = new JButton("Notifications  •  0");
         notifBtn.setFont(Theme.FONT_BODY_BOLD);
         notifBtn.setFocusPainted(false);
         notifBtn.setBackground(new Color(241, 245, 249));
         notifBtn.setForeground(Theme.TEXT_PRIMARY);
         notifBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        notifBtn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Theme.BORDER, 1, true), new EmptyBorder(7, 10, 7, 10)));
         notifBtn.addActionListener(e -> {
             NotificationsDialog dlg = new NotificationsDialog(this, notificationService, this::updateNotificationBadge);
             dlg.setVisible(true);
@@ -166,8 +172,8 @@ public class MainWindow extends JFrame implements SessionManager.SessionListener
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBackground(Theme.SIDEBAR_BG);
-        sidebar.setPreferredSize(new Dimension(230, getHeight()));
-        sidebar.setBorder(new EmptyBorder(20, 12, 20, 12));
+        sidebar.setPreferredSize(new Dimension(244, getHeight()));
+        sidebar.setBorder(new EmptyBorder(24, 14, 20, 14));
 
         JLabel menuHead = new JLabel("MAIN MENU");
         menuHead.setFont(Theme.FONT_SMALL_BOLD);
@@ -229,6 +235,15 @@ public class MainWindow extends JFrame implements SessionManager.SessionListener
             }
         });
 
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                if (!Boolean.TRUE.equals(btn.getClientProperty("active"))) btn.setBackground(Theme.SIDEBAR_HOVER);
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                if (!Boolean.TRUE.equals(btn.getClientProperty("active"))) btn.setBackground(Theme.SIDEBAR_BG);
+            }
+        });
+
         navButtons.add(btn);
         return btn;
     }
@@ -246,6 +261,7 @@ public class MainWindow extends JFrame implements SessionManager.SessionListener
                 b.setBackground(Theme.SIDEBAR_BG);
                 b.setForeground(new Color(226, 232, 240));
             }
+            b.putClientProperty("active", active);
         }
 
         // Refresh destination view
@@ -277,7 +293,7 @@ public class MainWindow extends JFrame implements SessionManager.SessionListener
         User user = SessionManager.getInstance().getCurrentUser();
         if (user != null) {
             int unread = notificationService.getUnreadCount(user.getId());
-            notifBtn.setText("🔔 Notifications (" + unread + ")");
+            notifBtn.setText("Notifications  •  " + unread);
             if (unread > 0) {
                 notifBtn.setBackground(new Color(254, 243, 199)); // amber highlight
                 notifBtn.setForeground(new Color(180, 83, 9));

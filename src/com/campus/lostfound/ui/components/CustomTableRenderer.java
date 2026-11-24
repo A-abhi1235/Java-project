@@ -15,7 +15,7 @@ public class CustomTableRenderer extends DefaultTableCellRenderer {
     private final StatusBadge badge = new StatusBadge();
 
     public static void applyStyling(JTable table) {
-        table.setRowHeight(40);
+        table.setRowHeight(44);
         table.setFont(Theme.FONT_BODY);
         table.setSelectionBackground(new Color(238, 242, 255));
         table.setSelectionForeground(Theme.TEXT_PRIMARY);
@@ -23,12 +23,13 @@ public class CustomTableRenderer extends DefaultTableCellRenderer {
         table.setShowVerticalLines(false);
         table.setShowHorizontalLines(true);
         table.setFillsViewportHeight(true);
+        table.setIntercellSpacing(new Dimension(0, 0));
 
         JTableHeader header = table.getTableHeader();
         header.setFont(Theme.FONT_BODY_BOLD);
-        header.setBackground(new Color(241, 245, 249));
+        header.setBackground(Theme.BG_SUBTLE);
         header.setForeground(Theme.TEXT_SECONDARY);
-        header.setPreferredSize(new Dimension(header.getWidth(), 38));
+        header.setPreferredSize(new Dimension(header.getWidth(), 42));
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER));
 
         CustomTableRenderer renderer = new CustomTableRenderer();

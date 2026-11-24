@@ -14,7 +14,7 @@ public class ModernButton extends JButton {
 
     private final Style style;
     private boolean isHovered = false;
-    private final int cornerRadius = 8;
+    private final int cornerRadius = 10;
 
     public ModernButton(String text) {
         this(text, Style.PRIMARY);
@@ -29,6 +29,7 @@ public class ModernButton extends JButton {
         setContentAreaFilled(false);
         setCursor(new Cursor(Cursor.HAND_CURSOR));
         setMargin(new Insets(8, 16, 8, 16));
+        setOpaque(false);
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -53,6 +54,11 @@ public class ModernButton extends JButton {
         Color bgColor;
         Color fgColor;
 
+        if (!isEnabled()) {
+            bgColor = Theme.BG_SUBTLE;
+            fgColor = Theme.TEXT_MUTED;
+        } else {
+
         switch (style) {
             case PRIMARY:
                 bgColor = isHovered ? Theme.PRIMARY_HOVER : Theme.PRIMARY;
@@ -76,6 +82,7 @@ public class ModernButton extends JButton {
                 fgColor = Theme.PRIMARY;
                 break;
         }
+        }
 
         // Background
         g2.setColor(bgColor);
@@ -85,7 +92,7 @@ public class ModernButton extends JButton {
         if (style == Style.OUTLINE) {
             g2.setColor(Theme.PRIMARY);
             g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, cornerRadius, cornerRadius);
-        } else if (style == Style.SECONDARY) {
+        } else if (style == Style.SECONDARY || !isEnabled()) {
             g2.setColor(Theme.BORDER);
             g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, cornerRadius, cornerRadius);
         }
@@ -103,6 +110,6 @@ public class ModernButton extends JButton {
     @Override
     public Dimension getPreferredSize() {
         Dimension d = super.getPreferredSize();
-        return new Dimension(Math.max(d.width + 24, 80), Math.max(d.height + 10, 36));
+        return new Dimension(Math.max(d.width + 26, 84), Math.max(d.height + 12, 38));
     }
 }

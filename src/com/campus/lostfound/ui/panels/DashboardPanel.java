@@ -12,6 +12,7 @@ import com.campus.lostfound.util.DateUtil;
 import com.campus.lostfound.util.SessionManager;
 import com.campus.lostfound.ui.components.CardPanel;
 import com.campus.lostfound.ui.components.CustomTableRenderer;
+import com.campus.lostfound.ui.components.HeroPanel;
 import com.campus.lostfound.ui.components.ModernButton;
 import com.campus.lostfound.ui.theme.Theme;
 
@@ -60,22 +61,23 @@ public class DashboardPanel extends JPanel {
         content.setBackground(Theme.BG_MAIN);
         content.setBorder(new EmptyBorder(24, 28, 24, 28));
 
-        // 1. Welcome Card Banner
-        CardPanel banner = new CardPanel(12, 20);
+        // 1. Welcome banner
+        HeroPanel banner = new HeroPanel(16);
         banner.setLayout(new BorderLayout());
-        banner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+        banner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 118));
+        banner.setBorder(new EmptyBorder(22, 24, 20, 24));
 
         JPanel bannerText = new JPanel();
         bannerText.setLayout(new BoxLayout(bannerText, BoxLayout.Y_AXIS));
-        bannerText.setBackground(Color.WHITE);
+        bannerText.setOpaque(false);
 
         welcomeLabel = new JLabel("Welcome to Campus Lost & Found");
         welcomeLabel.setFont(Theme.FONT_HEADER_LARGE);
-        welcomeLabel.setForeground(Theme.PRIMARY_DARK);
+        welcomeLabel.setForeground(Color.WHITE);
 
         JLabel bannerSub = new JLabel("Helping students, faculty, and campus staff recover lost belongings quickly and securely.");
         bannerSub.setFont(Theme.FONT_BODY);
-        bannerSub.setForeground(Theme.TEXT_SECONDARY);
+        bannerSub.setForeground(new Color(219, 234, 254));
 
         bannerText.add(welcomeLabel);
         bannerText.add(Box.createVerticalStrut(4));
@@ -88,7 +90,7 @@ public class DashboardPanel extends JPanel {
         // 2. Metrics Cards Row
         JPanel statsGrid = new JPanel(new GridLayout(1, 5, 14, 0));
         statsGrid.setBackground(Theme.BG_MAIN);
-        statsGrid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 95));
+        statsGrid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
         totalItemsVal = new JLabel("0");
         lostCountVal = new JLabel("0");
@@ -96,11 +98,11 @@ public class DashboardPanel extends JPanel {
         returnedCountVal = new JLabel("0");
         recoveryRateVal = new JLabel("0%");
 
-        statsGrid.add(createStatCard("Total Reported", totalItemsVal, Theme.PRIMARY));
-        statsGrid.add(createStatCard("Active Lost", lostCountVal, Theme.DANGER));
-        statsGrid.add(createStatCard("Active Found", foundCountVal, Theme.INFO));
-        statsGrid.add(createStatCard("Recovered Items", returnedCountVal, Theme.SUCCESS));
-        statsGrid.add(createStatCard("Recovery Rate", recoveryRateVal, Theme.PURPLE));
+        statsGrid.add(createStatCard("Total Reported", "ALL REPORTS", totalItemsVal, Theme.PRIMARY));
+        statsGrid.add(createStatCard("Active Lost", "NEEDS HELP", lostCountVal, Theme.DANGER));
+        statsGrid.add(createStatCard("Active Found", "READY TO RETURN", foundCountVal, Theme.INFO));
+        statsGrid.add(createStatCard("Recovered Items", "SUCCESSFULLY CLOSED", returnedCountVal, Theme.SUCCESS));
+        statsGrid.add(createStatCard("Recovery Rate", "CAMPUS IMPACT", recoveryRateVal, Theme.PURPLE));
 
         content.add(statsGrid);
         content.add(Box.createVerticalStrut(20));
@@ -202,19 +204,29 @@ public class DashboardPanel extends JPanel {
         refreshData();
     }
 
-    private JPanel createStatCard(String title, JLabel valueLabel, Color accentColor) {
+    private JPanel createStatCard(String title, String eyebrow, JLabel valueLabel, Color accentColor) {
         CardPanel card = new CardPanel(10, 14);
-        card.setLayout(new BorderLayout(0, 4));
+        card.setLayout(new BorderLayout(0, 2));
 
         JLabel titleLbl = new JLabel(title);
         titleLbl.setFont(Theme.FONT_SMALL_BOLD);
         titleLbl.setForeground(Theme.TEXT_SECONDARY);
 
+        JLabel eyebrowLbl = new JLabel(eyebrow);
+        eyebrowLbl.setFont(new Font("Segoe UI", Font.BOLD, 9));
+        eyebrowLbl.setForeground(accentColor);
+
         valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
         valueLabel.setForeground(accentColor);
 
-        card.add(titleLbl, BorderLayout.NORTH);
-        card.add(valueLabel, BorderLayout.CENTER);
+        JPanel labels = new JPanel();
+        labels.setLayout(new BoxLayout(labels, BoxLayout.Y_AXIS));
+        labels.setOpaque(false);
+        labels.add(eyebrowLbl);
+        labels.add(Box.createVerticalStrut(3));
+        labels.add(titleLbl);
+        card.add(labels, BorderLayout.NORTH);
+        card.add(valueLabel, BorderLayout.SOUTH);
         return card;
     }
 

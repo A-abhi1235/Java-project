@@ -12,11 +12,13 @@ public final class Theme {
     public static final Color PRIMARY = new Color(37, 99, 235);        // Royal Blue #2563EB
     public static final Color PRIMARY_HOVER = new Color(29, 78, 216);  // #1D4ED8
     public static final Color PRIMARY_DARK = new Color(15, 23, 42);    // Slate Dark #0F172A
+    public static final Color PRIMARY_LIGHT = new Color(219, 234, 254);
     public static final Color SIDEBAR_BG = new Color(30, 41, 59);      // Slate 800 #1E293B
     public static final Color SIDEBAR_HOVER = new Color(51, 65, 85);   // Slate 700
     public static final Color SIDEBAR_ACTIVE = new Color(37, 99, 235); // Active selection
 
     public static final Color BG_MAIN = new Color(248, 250, 252);      // Off-white / Slate 50
+    public static final Color BG_SUBTLE = new Color(241, 245, 249);
     public static final Color BG_CARD = Color.WHITE;
     public static final Color BORDER = new Color(226, 232, 240);       // Slate 200
     public static final Color BORDER_FOCUS = new Color(59, 130, 246);  // Blue 500

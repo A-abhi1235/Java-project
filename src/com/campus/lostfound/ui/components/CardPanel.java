@@ -25,12 +25,11 @@ public class CardPanel extends JPanel {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // White card background
+        // Quiet, elevated surface that keeps dense screens easy to scan.
         g2.setColor(Theme.BG_CARD);
         g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, radius, radius);
 
-        // Subtle slate border
-        g2.setColor(Theme.BORDER);
+        g2.setColor(new Color(215, 226, 240));
         g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, radius, radius);
 
         g2.dispose();

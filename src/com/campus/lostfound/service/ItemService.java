@@ -10,6 +10,7 @@ import com.campus.lostfound.exception.ValidationException;
 import com.campus.lostfound.model.*;
 import com.campus.lostfound.util.SmartMatcher;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +45,9 @@ public class ItemService {
 
     private void validateItem(BaseItem item) throws ValidationException {
         List<String> errors = new ArrayList<>();
+        if (item == null) {
+            throw new ValidationException("Item details are required.");
+        }
         if (item.getTitle() == null || item.getTitle().trim().isEmpty()) {
             errors.add("Item title is required.");
         }
@@ -58,12 +62,21 @@ public class ItemService {
         }
         if (item.getDateReported() == null) {
             errors.add("Date reported is required.");
+        } else if (item.getDateReported().isAfter(LocalDate.now())) {
+            errors.add("The lost/found date cannot be in the future.");
         }
 
         if (item instanceof LostItem) {
             LostItem lost = (LostItem) item;
             if (lost.getRewardAmount() < 0) {
                 errors.add("Reward amount cannot be negative.");
+            }
+        }
+
+        if (item instanceof FoundItem) {
+            FoundItem found = (FoundItem) item;
+            if (found.getStorageLocation() == null || found.getStorageLocation().trim().isEmpty()) {
+                errors.add("Please provide where the found item can be collected.");
             }
         }
 

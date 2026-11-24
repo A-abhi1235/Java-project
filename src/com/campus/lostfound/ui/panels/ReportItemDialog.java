@@ -127,6 +127,7 @@ public class ReportItemDialog extends JDialog {
         grid.add(categoryCombo);
 
         locationCombo = new ModernComboBox<>(AppConfig.EDITABLE_CAMPUS_LOCATIONS);
+        locationCombo.setEditable(true);
         grid.add(createLabel("Campus Location *"));
         grid.add(locationCombo);
 
@@ -255,6 +256,9 @@ public class ReportItemDialog extends JDialog {
     private void chooseAndAttachImage() {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select Item Image");
+        chooser.setAcceptAllFileFilterUsed(false);
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+            "Image files (JPG, PNG, GIF, BMP)", "jpg", "jpeg", "png", "gif", "bmp"));
         int res = chooser.showOpenDialog(this);
         if (res == JFileChooser.APPROVE_OPTION) {
             File selected = chooser.getSelectedFile();
@@ -283,7 +287,8 @@ public class ReportItemDialog extends JDialog {
 
         Category cat = (Category) categoryCombo.getSelectedItem();
         int catId = cat != null ? cat.getId() : 0;
-        String location = (String) locationCombo.getSelectedItem();
+        Object selectedLocation = locationCombo.getEditor().getItem();
+        String location = selectedLocation != null ? selectedLocation.toString().trim() : "";
         LocalDate reportDate = DateUtil.parseDate(dateField.getText());
 
         BaseItem item;

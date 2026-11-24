@@ -32,6 +32,7 @@ public class BrowseItemsPanel extends JPanel {
     private JTable itemsTable;
     private DefaultTableModel tableModel;
     private List<BaseItem> displayedItems = new ArrayList<>();
+    private JLabel resultCountLabel;
 
     // Wrapper helper classes for ComboBox items
     private static class CategoryItemWrapper {
@@ -112,6 +113,7 @@ public class BrowseItemsPanel extends JPanel {
 
         searchField = new ModernTextField(14);
         searchField.setToolTipText("Search title, description or location");
+        searchField.addActionListener(e -> performSearch());
 
         typeCombo = new ModernComboBox<>(new String[]{"All Types", "Lost Only", "Found Only"});
 
@@ -146,6 +148,12 @@ public class BrowseItemsPanel extends JPanel {
         filterCard.add(resetBtn);
 
         topContainer.add(filterCard);
+        resultCountLabel = new JLabel(" ");
+        resultCountLabel.setFont(Theme.FONT_SMALL_BOLD);
+        resultCountLabel.setForeground(Theme.TEXT_SECONDARY);
+        resultCountLabel.setBorder(new EmptyBorder(8, 2, 0, 0));
+        resultCountLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        topContainer.add(resultCountLabel);
         add(topContainer, BorderLayout.NORTH);
 
         // 3. Items Table
@@ -272,7 +280,11 @@ public class BrowseItemsPanel extends JPanel {
                     item.getReportedByUserName()
                 });
             }
+            resultCountLabel.setText(displayedItems.isEmpty()
+                ? "No items match these filters. Try clearing a filter or reporting an item."
+                : displayedItems.size() + (displayedItems.size() == 1 ? " item found" : " items found"));
         } catch (DatabaseException e) {
+            resultCountLabel.setText("Could not load items.");
             JOptionPane.showMessageDialog(this, "Search error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }

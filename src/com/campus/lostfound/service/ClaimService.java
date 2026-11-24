@@ -99,6 +99,9 @@ public class ClaimService {
             throw new ResourceNotFoundException("Claim #" + claimId + " not found.");
         }
         Claim claim = claimOpt.get();
+        if (claim.getStatus() != ClaimStatus.PENDING) {
+            throw new ValidationException("Only pending claims can be approved.");
+        }
 
         Optional<BaseItem> itemOpt = itemDao.findById(claim.getItemId());
         if (!itemOpt.isPresent()) {
@@ -150,6 +153,9 @@ public class ClaimService {
             throw new ResourceNotFoundException("Claim #" + claimId + " not found.");
         }
         Claim claim = claimOpt.get();
+        if (claim.getStatus() != ClaimStatus.PENDING) {
+            throw new ValidationException("Only pending claims can be rejected.");
+        }
 
         Optional<BaseItem> itemOpt = itemDao.findById(claim.getItemId());
         if (!itemOpt.isPresent()) {

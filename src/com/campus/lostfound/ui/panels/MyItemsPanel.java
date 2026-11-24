@@ -157,6 +157,16 @@ public class MyItemsPanel extends JPanel {
         }
 
         BaseItem item = myItems.get(row);
+        if (item.getStatus() == ItemStatus.CLAIM_PENDING) {
+            JOptionPane.showMessageDialog(this,
+                "This item has a claim under review. Approve or reject the claim before marking it resolved.",
+                "Claim Needs Review", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (item.getStatus() == ItemStatus.RETURNED) {
+            JOptionPane.showMessageDialog(this, "This item is already marked as returned.");
+            return;
+        }
         int confirm = JOptionPane.showConfirmDialog(this,
             "Mark '" + item.getTitle() + "' as returned/resolved?",
             "Confirm Resolution", JOptionPane.YES_NO_OPTION);

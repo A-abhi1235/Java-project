@@ -221,6 +221,7 @@ public class MainWindow extends JFrame implements SessionManager.SessionListener
         btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
         btn.setAlignmentX(Component.LEFT_ALIGNMENT);
         btn.setBorder(new EmptyBorder(10, 14, 10, 14));
+        btn.putClientProperty("viewName", viewName);
 
         btn.addActionListener(e -> {
             if (!"RADAR".equals(viewName)) {
@@ -237,7 +238,7 @@ public class MainWindow extends JFrame implements SessionManager.SessionListener
 
         // Highlight active nav button
         for (JButton b : navButtons) {
-            boolean active = b.getText().toUpperCase().contains(viewName.replace("_", " "));
+            boolean active = viewName.equals(b.getClientProperty("viewName"));
             if (active) {
                 b.setBackground(Theme.SIDEBAR_ACTIVE);
                 b.setForeground(Color.WHITE);

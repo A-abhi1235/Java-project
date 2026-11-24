@@ -1,0 +1,24 @@
+# Compiled Java class files
+bin/
+*.class
+
+# SQLite database file (automatically created and seeded at application startup)
+data/*.db
+data/*.db-journal
+
+# Logs & Temporary files
+*.log
+sources.txt
+
+# IDE / Editor configuration
+.idea/
+.vscode/
+*.iml
+*.project
+*.classpath
+.settings/
+
+# OS generated files
+Thumbs.db
+Desktop.ini
+.DS_Store

@@ -157,6 +157,9 @@ public class ItemService {
         if (!isAdmin && existing.getReportedByUserId() != requestingUserId) {
             throw new ValidationException("You can only delete items you reported.");
         }
+        if (existing.getStatus() == ItemStatus.CLAIM_PENDING) {
+            throw new ValidationException("This request has a claim under review. Resolve the claim before removing it.");
+        }
         return itemDao.delete(itemId);
     }
 

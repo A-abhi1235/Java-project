@@ -190,11 +190,38 @@ public class ItemDetailDialog extends JDialog {
             footer.add(claimBtn);
         }
 
+        if (isOwner || isAdmin) {
+            ModernButton removeBtn = new ModernButton("Remove Request", ModernButton.Style.DANGER);
+            removeBtn.addActionListener(e -> removeRequest());
+            footer.add(removeBtn);
+        }
+
         ModernButton closeBtn = new ModernButton("Close", ModernButton.Style.SECONDARY);
         closeBtn.addActionListener(e -> dispose());
         footer.add(closeBtn);
 
         add(footer, BorderLayout.SOUTH);
+    }
+
+    private void removeRequest() {
+        User currentUser = SessionManager.getInstance().getCurrentUser();
+        if (currentUser == null) return;
+
+        int confirmation = JOptionPane.showConfirmDialog(this,
+            "Remove '" + item.getTitle() + "'? This cannot be undone.",
+            "Remove " + item.getItemType().getDisplayName() + " Request",
+            JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (confirmation != JOptionPane.YES_OPTION) return;
+
+        try {
+            itemService.deleteItem(item.getId(), currentUser.getId(), currentUser.isAdmin());
+            JOptionPane.showMessageDialog(this, "The request has been removed.", "Request Removed", JOptionPane.INFORMATION_MESSAGE);
+            if (onActionCompleteCallback != null) onActionCompleteCallback.run();
+            dispose();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Could not remove this request: " + ex.getMessage(),
+                "Remove Request", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void addSpecRow(JPanel panel, String label, String value) {

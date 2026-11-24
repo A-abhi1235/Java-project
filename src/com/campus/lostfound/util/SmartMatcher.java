@@ -8,145 +8,148 @@ import com.campus.lostfound.model.MatchSuggestion;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-/**
- * Smart matching engine that detects high-probability matches between
- * reported Lost items and Found items across campus.
- */
+/** Scores likely Lost/Found pairs using category, location, text and date evidence. */
 public final class SmartMatcher {
     private SmartMatcher() {}
 
-    /**
-     * Common English stop words to ignore during title & description token matching.
-     */
     private static final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
-        "a", "an", "the", "in", "on", "at", "for", "with", "about", "against", "between",
-        "into", "through", "during", "before", "after", "above", "below", "to", "from",
-        "up", "down", "in", "out", "over", "under", "again", "further", "then", "once",
-        "here", "there", "when", "where", "why", "how", "all", "any", "both", "each",
-        "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own",
-        "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don",
-        "should", "now", "lost", "found", "my", "i", "me", "item", "please"
+        "a", "an", "the", "in", "on", "at", "for", "with", "about", "and", "or", "of",
+        "to", "from", "by", "is", "are", "was", "were", "my", "i", "me", "item", "lost",
+        "found", "please", "this", "that", "has", "have", "near", "around", "campus"
     ));
 
-    /**
-     * Finds matches for a target item against a pool of candidate items.
-     */
     public static List<MatchSuggestion> findMatches(BaseItem targetItem, List<BaseItem> candidates) {
         List<MatchSuggestion> suggestions = new ArrayList<>();
-        if (targetItem == null || candidates == null || candidates.isEmpty()) {
-            return suggestions;
-        }
+        if (targetItem == null || candidates == null || candidates.isEmpty()) return suggestions;
 
-        ItemType targetType = targetItem.getItemType();
-        ItemType desiredCandidateType = (targetType == ItemType.LOST) ? ItemType.FOUND : ItemType.LOST;
-
+        ItemType desiredType = targetItem.getItemType() == ItemType.LOST ? ItemType.FOUND : ItemType.LOST;
         for (BaseItem candidate : candidates) {
-            // Only compare open items across opposite types (Lost vs Found)
-            if (candidate.getItemType() != desiredCandidateType) continue;
-            if (candidate.getId() == targetItem.getId()) continue;
+            if (candidate.getItemType() != desiredType || candidate.getId() == targetItem.getId()) continue;
             if (candidate.getStatus() != ItemStatus.OPEN && candidate.getStatus() != ItemStatus.CLAIM_PENDING) continue;
 
-            BaseItem lost = (targetType == ItemType.LOST) ? targetItem : candidate;
-            BaseItem found = (targetType == ItemType.FOUND) ? targetItem : candidate;
-
+            BaseItem lost = targetItem.getItemType() == ItemType.LOST ? targetItem : candidate;
+            BaseItem found = targetItem.getItemType() == ItemType.FOUND ? targetItem : candidate;
             MatchResult result = calculateMatch(lost, found);
-            if (result.score >= 35) { // Match threshold
-                suggestions.add(new MatchSuggestion(lost, found, result.score, result.reason));
-            }
+            if (result.isCandidate) suggestions.add(new MatchSuggestion(lost, found, result.score, result.reason));
         }
-
-        // Sort descending by score
         suggestions.sort((a, b) -> Integer.compare(b.getConfidenceScore(), a.getConfidenceScore()));
         return suggestions;
     }
 
-    private static class MatchResult {
-        int score;
-        String reason;
+    private static final class MatchResult {
+        final int score;
+        final String reason;
+        final boolean isCandidate;
 
-        MatchResult(int score, String reason) {
+        MatchResult(int score, String reason, boolean isCandidate) {
             this.score = score;
             this.reason = reason;
+            this.isCandidate = isCandidate;
         }
     }
 
     private static MatchResult calculateMatch(BaseItem lost, BaseItem found) {
-        int totalScore = 0;
+        int score = 0;
         List<String> reasons = new ArrayList<>();
-
-        // 1. Category Matching (up to 35 points)
-        if (lost.getCategoryId() > 0 && lost.getCategoryId() == found.getCategoryId()) {
-            totalScore += 35;
-            reasons.add("Matching Category");
+        boolean categoryMatch = lost.getCategoryId() > 0 && lost.getCategoryId() == found.getCategoryId();
+        if (categoryMatch) {
+            score += 30;
+            reasons.add("Same category");
         }
 
-        // 2. Location Matching (up to 20 points)
-        if (lost.getLocation() != null && found.getLocation() != null) {
-            String loc1 = lost.getLocation().trim().toLowerCase();
-            String loc2 = found.getLocation().trim().toLowerCase();
-            if (loc1.equals(loc2)) {
-                totalScore += 20;
-                reasons.add("Same Location (" + lost.getLocation() + ")");
-            } else if (loc1.contains(loc2) || loc2.contains(loc1)) {
-                totalScore += 12;
-                reasons.add("Nearby Location");
-            }
+        Set<String> lostTitle = extractKeywords(lost.getTitle());
+        Set<String> foundTitle = extractKeywords(found.getTitle());
+        Set<String> sharedTitle = intersection(lostTitle, foundTitle);
+        if (!sharedTitle.isEmpty()) {
+            score += Math.min(28, 12 + sharedTitle.size() * 8);
+            reasons.add("Title match: " + formatWords(sharedTitle));
         }
 
-        // 3. Keyword / Text Similarity (up to 35 points)
-        Set<String> lostTokens = extractKeywords(lost.getTitle() + " " + lost.getDescription());
-        Set<String> foundTokens = extractKeywords(found.getTitle() + " " + found.getDescription());
-
-        int commonCount = 0;
-        List<String> matchedWords = new ArrayList<>();
-        for (String token : lostTokens) {
-            if (foundTokens.contains(token)) {
-                commonCount++;
-                if (matchedWords.size() < 4) {
-                    matchedWords.add(token);
-                }
-            }
+        Set<String> lostText = extractKeywords(lost.getTitle() + " " + lost.getDescription());
+        Set<String> foundText = extractKeywords(found.getTitle() + " " + found.getDescription());
+        Set<String> sharedText = intersection(lostText, foundText);
+        sharedText.removeAll(sharedTitle);
+        if (!sharedText.isEmpty()) {
+            score += Math.min(22, sharedText.size() * 6);
+            reasons.add("Shared details: " + formatWords(sharedText));
         }
 
-        if (!lostTokens.isEmpty() && !foundTokens.isEmpty()) {
-            double jaccard = (double) commonCount / (lostTokens.size() + foundTokens.size() - commonCount);
-            int keywordPoints = (int) Math.min(35, Math.round(jaccard * 75) + (commonCount * 7));
-            totalScore += keywordPoints;
-            if (commonCount > 0) {
-                reasons.add("Shared Keywords: [" + String.join(", ", matchedWords) + "]");
-            }
+        int locationScore = locationScore(lost.getLocation(), found.getLocation());
+        if (locationScore > 0) {
+            score += locationScore;
+            reasons.add(locationScore >= 18 ? "Same location" : "Related location");
         }
 
-        // 4. Date Proximity (up to 10 points)
-        if (lost.getDateReported() != null && found.getDateReported() != null) {
-            long daysApart = Math.abs(ChronoUnit.DAYS.between(lost.getDateReported(), found.getDateReported()));
-            if (daysApart <= 2) {
-                totalScore += 10;
-                reasons.add("Occurred within 48h");
-            } else if (daysApart <= 7) {
-                totalScore += 6;
-                reasons.add("Occurred within 1 week");
-            } else if (daysApart <= 14) {
-                totalScore += 3;
-            }
+        int dateScore = dateScore(lost, found);
+        if (dateScore > 0) {
+            score += dateScore;
+            reasons.add(dateScore >= 10 ? "Reported within 2 days" : "Reported within 1 week");
         }
 
-        int normalizedScore = Math.min(100, totalScore);
-        String reasonStr = reasons.isEmpty() ? "General similarity" : String.join(" • ", reasons);
-        return new MatchResult(normalizedScore, reasonStr);
+        boolean hasTextEvidence = !sharedTitle.isEmpty() || !sharedText.isEmpty();
+        boolean hasSupportingEvidence = locationScore > 0 || dateScore > 0 || hasTextEvidence;
+        boolean candidate = (categoryMatch && hasSupportingEvidence && score >= 42)
+            || (!categoryMatch && sharedTitle.size() >= 2 && score >= 50);
+        return new MatchResult(Math.min(100, score),
+            reasons.isEmpty() ? "Limited similarity" : String.join(" • ", reasons), candidate);
+    }
+
+    private static int locationScore(String left, String right) {
+        if (left == null || right == null) return 0;
+        String normalizedLeft = normalizeText(left);
+        String normalizedRight = normalizeText(right);
+        if (normalizedLeft.isEmpty() || normalizedRight.isEmpty()) return 0;
+        if (normalizedLeft.equals(normalizedRight)) return 18;
+        Set<String> shared = intersection(extractKeywords(normalizedLeft), extractKeywords(normalizedRight));
+        if (shared.size() >= 2) return 12;
+        return shared.size() == 1 ? 6 : 0;
+    }
+
+    private static int dateScore(BaseItem lost, BaseItem found) {
+        if (lost.getDateReported() == null || found.getDateReported() == null) return 0;
+        long days = Math.abs(ChronoUnit.DAYS.between(lost.getDateReported(), found.getDateReported()));
+        if (days <= 2) return 10;
+        if (days <= 7) return 6;
+        if (days <= 14) return 3;
+        return 0;
     }
 
     private static Set<String> extractKeywords(String text) {
-        Set<String> keywords = new HashSet<>();
-        if (text == null) return keywords;
-
-        String[] words = text.toLowerCase().replaceAll("[^a-z0-9\\s]", " ").split("\\s+");
-        for (String w : words) {
-            w = w.trim();
-            if (w.length() >= 3 && !STOP_WORDS.contains(w)) {
-                keywords.add(w);
-            }
+        Set<String> words = new LinkedHashSet<>();
+        if (text == null) return words;
+        String normalized = normalizeText(text);
+        for (String raw : normalized.split("\\s+")) {
+            String word = stem(raw);
+            if ((word.length() >= 3 || word.matches(".*\\d.*")) && !STOP_WORDS.contains(word)) words.add(word);
         }
-        return keywords;
+        return words;
+    }
+
+    private static String normalizeText(String text) {
+        return text.toLowerCase(Locale.ROOT)
+            .replace("computer science", "cs")
+            .replace("gymnasium", "gym")
+            .replace("food court", "cafeteria")
+            .replaceAll("[^a-z0-9\\s]", " ")
+            .replaceAll("\\s+", " ").trim();
+    }
+
+    private static String stem(String word) {
+        if (word.endsWith("ies") && word.length() > 4) return word.substring(0, word.length() - 3) + "y";
+        if (word.endsWith("es") && word.length() > 4) return word.substring(0, word.length() - 2);
+        if (word.endsWith("s") && word.length() > 3) return word.substring(0, word.length() - 1);
+        return word;
+    }
+
+    private static Set<String> intersection(Set<String> first, Set<String> second) {
+        Set<String> result = new LinkedHashSet<>(first);
+        result.retainAll(second);
+        return result;
+    }
+
+    private static String formatWords(Set<String> words) {
+        List<String> limited = new ArrayList<>(words);
+        if (limited.size() > 3) limited = limited.subList(0, 3);
+        return String.join(", ", limited);
     }
 }

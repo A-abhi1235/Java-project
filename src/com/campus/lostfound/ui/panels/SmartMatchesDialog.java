@@ -4,8 +4,10 @@ import com.campus.lostfound.exception.DatabaseException;
 import com.campus.lostfound.model.BaseItem;
 import com.campus.lostfound.model.ItemType;
 import com.campus.lostfound.model.MatchSuggestion;
+import com.campus.lostfound.model.User;
 import com.campus.lostfound.service.ClaimService;
 import com.campus.lostfound.service.ItemService;
+import com.campus.lostfound.util.SessionManager;
 import com.campus.lostfound.ui.components.CardPanel;
 import com.campus.lostfound.ui.components.ModernButton;
 import com.campus.lostfound.ui.components.StatusBadge;
@@ -156,12 +158,19 @@ public class SmartMatchesDialog extends JDialog {
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 16));
         right.setBackground(Color.WHITE);
 
-        ModernButton claimBtn = new ModernButton("Claim Item", ModernButton.Style.PRIMARY);
-        claimBtn.addActionListener(e -> {
-            ClaimDialog cd = new ClaimDialog(this, match.getFoundItem(), claimService, onActionCallback);
-            cd.setVisible(true);
-        });
-        right.add(claimBtn);
+        User currentUser = SessionManager.getInstance().getCurrentUser();
+        boolean ownsLostReport = currentUser != null
+            && match.getLostItem().getReportedByUserId() == currentUser.getId();
+        boolean ownsFoundReport = currentUser != null
+            && match.getFoundItem().getReportedByUserId() == currentUser.getId();
+        if (ownsLostReport && !ownsFoundReport) {
+            ModernButton claimBtn = new ModernButton("Claim Item", ModernButton.Style.PRIMARY);
+            claimBtn.addActionListener(e -> {
+                ClaimDialog cd = new ClaimDialog(this, match.getFoundItem(), claimService, onActionCallback);
+                cd.setVisible(true);
+            });
+            right.add(claimBtn);
+        }
 
         card.add(right, BorderLayout.EAST);
         return card;
